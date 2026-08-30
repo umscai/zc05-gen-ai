@@ -21,8 +21,33 @@ Project folder and file structures are shown below, where `generative_model.ipyn
 
 data folder and out folder are not part of git repo, data-folder will be populated when dataset is downloaded, and out folder generated during run.
 ```console
-.
-TODO
+├── data
+│   └── images
+│       └── sample-image.jpg
+├── LICENSE
+├── minimal_req.ini
+├── notebook
+│   └── generative_model.ipynb
+├── out
+│   └── sample-out.pth
+├── README.md
+├── report
+│   ├── Generative_AI_Analysis_Report.pdf
+│   ├── generative_model.html
+│   └── latex
+│       ├── img
+│       ├── ref
+│       └── tex
+└── src
+    ├── config.py
+    ├── utils.py
+    └── vae
+        ├── data.py
+        ├── __init__.py
+        ├── loss.py
+        ├── model.py
+        ├── optim.py
+        └── train.py
 ```
 
 ## Data Cleaning
@@ -55,11 +80,24 @@ The VAE build from Encoder (contains ConvBlock) and Decoder Block (contains Deco
 
 
 ## Results
+We use Binary-Cross-Entropy for reconstruction loss, and schedule the KLD-weight loss to show mode collapse when force to minimize the KLD-loss, the learning curve shows below
 
-### Final Accuracy comparison
-![Acc-comparison](./report/latex/img/acc-comparison.png)
+![Learning Curves](./report/latex/img/learning-curve.png)
 
-### Training curve/progress comparison
+Sample generated image during training on last-epoch model, and best model
 
-![Training-Curve-comparison](./report/latex/img/loss-acc-curves.png)
+![generated during training](./report/latex/img/generated-during-training.png)
 
+Sample latent vectors distribution and q-qplot for normaility check
+
+![latent-hist](./report/latex/img/latent-density.png)
+
+![latent-qqplot](./report/latex/img/latent-qqplot.png)
+
+Sample reconstruction by bets model and last-epoch model
+
+![recon](./report/latex/img/recon-last-best.png)
+
+Sample anime face generation from random vectors
+
+![generation](./report/latex/img/randomly-generated.png)
