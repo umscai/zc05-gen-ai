@@ -1,0 +1,124 @@
+%\documentclass[stu, 12pt]{apa7}
+\documentclass[stu, 12pt, floatsintext]{apa7}
+%\usepackage{fontspec}
+%\setmainfont{Times New Roman} % Or your system's equivalent serif font
+\usepackage[american]{babel}
+\usepackage{csquotes}
+\usepackage[style=apa, backend=biber]{biblatex}
+%\usepackage[style=authoryear, backend=biber]{biblatex} % Changed from style=apa
+\usepackage{float}
+\usepackage{multicol}
+\usepackage{hyperref} % nameref is bundled with hyperref
+\usepackage{graphicx}   % Required for including images
+\usepackage{subcaption} % Required for subfigures and subcaptions
+%\usepackage{listings}
+%\usepackage{xcolor}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{amsmath}
+
+% Define the console style before using it
+%\lstdefinestyle{console}{
+	%	backgroundcolor=\color{black!5},
+	%	basicstyle=\ttfamily\small,
+	%	breaklines=true,
+	%	frame=single,
+	%	rulecolor=\color{black!30}
+	%}
+\graphicspath{
+	{../img/}
+	%   {../img_ipynb/}
+	%	{../img/H1/}
+	%	{../../results/DayResult/}
+}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.png,.jpg}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	citecolor=blue,
+	urlcolor=blue
+}
+
+\addbibresource{../ref/references.bib}
+\title{Anime Face Generation with VAE}
+\author{Max Raxy}
+\affiliation{Udacity Institute of AI \& Technology}
+\course{Capstone-5: Generative AI Applications}
+\professor{~}
+\duedate{\today}
+
+\begin{document}
+	\maketitle
+	\tableofcontents
+	\newpage
+	\listoffigures%\thispagestyle{fancy}
+	\listoftables%\thispagestyle{fancy}
+	\newpage
+
+\section{Overview}
+We are using \textbf{Anime Face Dataset} from \textbf{Kaggle}~\parencites{kaggle-animeface}{org-animefacedataset}. The dataset contains $63565$ anime-face images, and the goal is to use Variational Auto-Encoder (VAE),~\parencites{org-vae1}{org-vae2} to generate anime faces.
+
+\section{Dataset or Prompt Description}
+Describe the data or prompt source, its size or scope, and how it supports the generative task.
+Dataset contains anime faces with aspect-ratio $1$  (with a very slight deviation from 1: mean=$1.000003$, standard deviation  =$0.000171$). The height and weight varies between $25$ to $220$ (Fig.~\ref{fig:dim-dist})
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=1.0\textwidth]{hw-hist}
+	\captionsetup{justification=centering}
+	\caption{Width and Height Distributions.}
+	\label{fig:dim-dist}
+\end{figure}
+
+We decided to resize all images to 64x64  for this project, this size still has good quality, and proper for training on home-PC with limited resources. Sample of original images resized to 64x64 are shown in Fig.~\ref{fig:sample-org}
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=1.0\textwidth]{sample-img-org}
+	\captionsetup{justification=centering}
+	\caption{Sample original images resized to 64x64.}
+	\label{fig:sample-org}
+\end{figure}
+
+
+\section{Model Design and Training Approach}
+Explain the model architecture, training setup, and key design decisions.
+
+\section{Output Evaluation and Interpretation}
+Discuss generated outputs, highlighting quality, variability, and limitations.
+
+\section{Ethical Considerations and Responsible Use}
+Identify at least one ethical concern related to bias, misuse, creative ownership, or societal impact.
+
+\section{Limitations and Future Improvements}
+Describe limitations of the model or data and propose realistic next steps.
+
+% apa does not include ref and appx in TOC we forced it
+\phantomsection % Ensures hyperref links to the correct page
+\addcontentsline{toc}{section}{References}
+\printbibliography %[heading=none] % Removes default unnumbered header so it doesn't double-up
+
+% Appendices start here (AFTER references)
+\appendix
+\phantomsection
+\addcontentsline{toc}{section}{Appendix A: Evaluation Metrics for Binary Classification}
+\section{Appendix A: Evaluation Metrics for Binary Classification}\label{app:a}
+\subsection{ELBO}
+In VAEs, the overall objective is to minimize the negative Evidence Lower Bound (ELBO):
+
+$$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{rec}} + \beta \cdot \mathcal{L}_{\text{KLD}}$$
+
+Here, the reconstruction loss measures how accurately the decoder reconstructs the input (using mean squared error),
+while the Kullback-Leibler Divergence ($\text{KLD}$) forces
+the latent space representation to approximate a standard normal distribution $\mathcal{N}(0, \mathbf{I})$.
+
+%\newpage
+%
+%\phantomsection
+%\addcontentsline{toc}{section}{Appendix B: XXX}
+%\section{Appendix B: XXX}
+%Content of Appendix B...
+\end{document}

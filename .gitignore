@@ -1,3 +1,24 @@
+# Only keep requirements.ini and final requirements.txt (both can be used by uv too)
+.python-version
+main.py
+pyproject.toml
+uv.lock
+
+# temp files (e.g. used for quick test) have x_ as prefix
+x_*
+# we have local Makefile not intended for source control
+Makefile
+
+# LATEX related
+#ignore all
+report/latex/tex/report.*
+#except the real source
+!report/latex/tex/report.tex
+
+data/
+out/
+*.bkp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -195,9 +216,9 @@ cython_debug/
 .abstra/
 
 # Visual Studio Code
-#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
+#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore
 #   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#   and can be added to the global gitignore or merged into this file. However, if you prefer, 
+#   and can be added to the global gitignore or merged into this file. However, if you prefer,
 #   you could uncomment the following to ignore the entire vscode folder
 # .vscode/
 # Temporary file for partial code execution
