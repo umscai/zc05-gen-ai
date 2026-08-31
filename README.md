@@ -1,6 +1,6 @@
 # Generative Model
 We are using Anime Face Dataset dataset from Kaggle. The dataset contains `63565` anime-face images, and the goal is to use Variational Auto-Encoder (VAE), to generate anime faces.
-__[PDF Report](./report/report.pdf)__
+__[PDF Report](./report/Generative_AI_Analysis_Report.pdf)__
 
 ## Dataset
 - Name: Anime Face Dataset dataset
