@@ -9544,11 +9544,10 @@ Epoch:99, Progress:99.0%, Total-Loss: Train= 0.598131, Valid= 0.598091
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h3 id="Note">Note<a class="anchor-link" href="#Note">¶</a></h3><ul>
 <li>At epoch 27 we have the best total validation loss</li>
-<li>Reconstruction loss seems to be flatten after epoch 27 (overfilling)</li>
-<li>We keep KLD-weight low at initial epochs and after the model trained and established its reconstruction capability we keep increasing KLD-weight, at some point around epoch 27, we can see KLD-loss start dropping, and forcing the model to pay more attention to KLD, cause the total construction loss increase slightly.</li>
+<li>We keep KLD-weight low at initial epochs and after the model trained and established its reconstruction capability we keep increasing KLD-weight, at some point around epoch 27, we can see KLD-loss start dropping, and forcing the model to pay more attention to KLD, cause the total construction loss increase.</li>
 <li>Overall epoch 27 is the sweet-spot, where we have best validation total-loss, and KLD is limited and not going up anymore</li>
-<li>Pushing the KL weight higher reduces the KL loss further, but degrades generation diversity and causes mode collapse, making the generated anime faces overly uniform (shown during training, and also in next cell where last-epoch model has min-KLG loss)</li>
-<li>For demonstration purpose we intentionally increase KLD-weight to show that we can keep decreasing KLD-loss, but it will affect the reconstruction loss (and consequently total-loss), and also the generated images can be affected (mode collapse)</li>
+<li>Pushing the KLD-weight higher, reduces the KLD-loss further, but degrades generation diversity and causes mode averaging (blurriness), making the generated anime faces overly uniform (shown during training, and also in next cell where last-epoch model has min-KLG loss)</li>
+<li>For demonstration purpose we intentionally increase KLD-weight to show that we can keep decreasing KLD-loss, but it will affect the reconstruction loss (and consequently total-loss), and also the generated images can be affected (mode averaging (blurriness))</li>
 </ul>
 </div>
 </div>
@@ -9560,7 +9559,7 @@ Epoch:99, Progress:99.0%, Total-Loss: Train= 0.598131, Valid= 0.598091
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Generated-samples-during-Training:-best-vs-last-epoch-model-(mode-collapse)">Generated samples during Training: best vs last-epoch model (mode collapse)<a class="anchor-link" href="#Generated-samples-during-Training:-best-vs-last-epoch-model-(mode-collapse)">¶</a></h3>
+<h3 id="Generated-samples-during-Training:-best-vs-last-epoch-model-(mode-averaging-(blurriness))">Generated samples during Training: best vs last-epoch model (mode averaging (blurriness))<a class="anchor-link" href="#Generated-samples-during-Training:-best-vs-last-epoch-model-(mode-averaging-(blurriness))">¶</a></h3>
 </div>
 </div>
 </div>
@@ -9617,7 +9616,7 @@ Epoch:99, Progress:99.0%, Total-Loss: Train= 0.598131, Valid= 0.598091
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h3 id="Note">Note<a class="anchor-link" href="#Note">¶</a></h3><ul>
 <li>while in epoch 27 we have our best model and generated images looks diverse (right image)</li>
-<li>the last-epoch model have min-KLD-loss but all generated sample looks almost similar (left model)</li>
+<li>the last-epoch model have min-KLD-loss but all generated sample looks almost similar (left model: mode averaging (blurriness))</li>
 <li>Therefore minimizing KLD-loss dose not necessary generate better samples,</li>
 <li>Decreasing or keep KLD-loss limited below some threshold will be a practical choice.</li>
 </ul>
@@ -10331,10 +10330,10 @@ Epoch:99, Progress:99.0%, Total-Loss: Train= 0.598131, Valid= 0.598091
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h3 id="Note">Note<a class="anchor-link" href="#Note">¶</a></h3><ul>
-<li>The above images are generated animie face from a same normal random latent vector</li>
-<li>last-epoch model has min kld loss but fails to generate diverse samples</li>
+<li>The above images are generated anime face from a same normal random latent vectors</li>
+<li>last-epoch model has min KLD loss but fails to generate diverse sample (mode averaging (blurriness))</li>
 <li>best model has best validation loss with limited KLD-loss and generated a diverse set of images</li>
-<li>Overall best model generate smooth colorful images, but it does not have sharpness or details like DCGAN or StyleGAN</li>
+<li>Overall best model generate smooth colorful images, but it does not have sharpness or details in more advanced models like DCGAN or StyleGAN</li>
 </ul>
 </div>
 </div>
@@ -10385,7 +10384,7 @@ Epoch:99, Progress:99.0%, Total-Loss: Train= 0.598131, Valid= 0.598091
 <li>optimizer, scheduler, and loss functions all defined with flexible parameter controlled via DataConfig class</li>
 <li>We trained the model and use a variable KLD-weight that increase with epochs, and we see its effect on learning curves</li>
 <li>model-parameter with best validation-loss saved, also model-parameter at last epoch with minimum KLD-loss saved</li>
-<li>For demonstration purpose we schedule KLD-weight to see the mode collapse when we aggressively try to minimize the KLD-loss</li>
+<li>For demonstration purpose we schedule KLD-weight to see the mode averaging (blurriness) when we aggressively try to minimize the KLD-loss</li>
 <li>We evaluated the model on test-dataset, and collect loss per image instead of average loss per batch or per epoch to find out images with best/worst loss</li>
 <li>Visually Checked the density of few latent vectors (to see if they look like normal density), also use q-qplot for better evaluation</li>
 <li>correlation between latent vectors also checked, to see if the vectors are uncorrelated (as ideal case), or not.</li>
@@ -10397,6 +10396,20 @@ Epoch:99, Progress:99.0%, Total-Loss: Train= 0.598131, Valid= 0.598091
 <li>(Future Work): Try different reconstruction loss (MSE or MSE+L1) and find proper KLD-weight (we did a quick check, but we did not spend time on them)</li>
 <li>(Future Work): We observed some invalid image (almost all black) that has minimum construction loss, find an automated way (script) to analyze images and only use quality image for training.</li>
 </ol>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f3870f8b-e226-483a-ad23-02a38feaa838">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+</div>
 </div>
 </div>
 </div>

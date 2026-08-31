@@ -38,6 +38,8 @@ data folder and out folder are not part of git repo, data-folder will be populat
 │       ├── img
 │       ├── ref
 │       └── tex
+├── requirements.txt
+├── sample.env
 └── src
     ├── config.py
     ├── utils.py
@@ -53,7 +55,7 @@ data folder and out folder are not part of git repo, data-folder will be populat
 ## Data Cleaning
 No cleaning was required for this dataset
 ## EDA
-Images have different heigh/width, with aspect ratio of 1 (with little deviation). All images are RGB images, and will be converted to to size 64x254 for machine learning processing.
+Images have different height/width, with aspect ratio of 1 (with little deviation). All images are RGB images, and will be converted to to size 64x254 for machine learning processing.
 
 sample image from original files shown below
 

@@ -55,15 +55,14 @@
 	\tableofcontents
 	\newpage
 	\listoffigures%\thispagestyle{fancy}
-	\listoftables%\thispagestyle{fancy}
+%	\listoftables%\thispagestyle{fancy}
 	\newpage
 
 \section{Overview}
-We are using \textbf{Anime Face Dataset} from \textbf{Kaggle}~\parencites{kaggle-animeface}{org-animefacedataset}. The dataset contains $63565$ anime-face images, and the goal is to use Variational Auto-Encoder (VAE),~\parencites{org-vae1}{org-vae2} to generate anime faces.
+We are using \textbf{Anime Face Dataset} from \textbf{Kaggle}~\parencites{kaggle-animeface}{org-animefacedataset}. The dataset contains $63565$ anime-face images, and the goal is to use \textbf{Variational Auto-Encoder (VAE),}~\parencites{org-vae1}{org-vae2} to generate anime faces.
 
-\section{Dataset or Prompt Description}
-Describe the data or prompt source, its size or scope, and how it supports the generative task.
-Dataset contains anime faces with aspect-ratio $1$  (with a very slight deviation from 1: mean=$1.000003$, standard deviation  =$0.000171$). The height and weight varies between $25$ to $220$ (Fig.~\ref{fig:dim-dist})
+\section{Dataset Description}
+Dataset contains anime faces with aspect-ratio $1$\footnote{Aspect-ratio has slight deviation from 1 with  mean=$1.000003$, standard deviation  =$0.000171$}. The height and width varies between $25$ to $220$ (Fig.~\ref{fig:dim-dist})
 
 \begin{figure}[!tbh]
 	\centering
@@ -73,48 +72,249 @@ Dataset contains anime faces with aspect-ratio $1$  (with a very slight deviatio
 	\label{fig:dim-dist}
 \end{figure}
 
-We decided to resize all images to 64x64  for this project, this size still has good quality, and proper for training on home-PC with limited resources. Sample of original images resized to 64x64 are shown in Fig.~\ref{fig:sample-org}
+We decided to resize all images to $64\times64$  for this project, this size still has good quality, and proper for training on home-PC with limited resources. Sample of original images resized to $64\times64$ are shown in Fig.~\ref{fig:sample-org}
+
+The dataset with $63565$  images is large enough for training a VAE model, and we split it to training: 50853 (80\%), validation: 6356 (10\%) and test: 6356 (10\%).
 
 \begin{figure}[!tbh]
 	\centering
-	\includegraphics[width=1.0\textwidth]{sample-img-org}
+	\includegraphics[width=0.5\textwidth]{sample-img-org}
 	\captionsetup{justification=centering}
-	\caption{Sample original images resized to 64x64.}
+	\caption{Sample original images resized to $64\times64$.}
 	\label{fig:sample-org}
 \end{figure}
 
-
+\newpage
 \section{Model Design and Training Approach}
-Explain the model architecture, training setup, and key design decisions.
+\subsection{Dataset Transformation}
+We used a simple transformation mainly to resize the images, and only used extra random horizontal flip in training transformation that make sense to have it in the face images, no other transformation  used to avoid injecting abnormal face into the model (Fig.~\ref{fig:transformation})
+
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=1.0\textwidth]{vae-data-prep-blocks.drawio}
+	\captionsetup{justification=centering}
+	\caption{Dataset Transformation Pipeline.}
+	\label{fig:transformation}
+\end{figure}
+
+Using normalization at last stage of transformation depends on other factors, for example if we want to use Binary-Cross-Entropy (BCE)~\parencite{enwiki:bce} as a reconstruction loss function, we need to use \textit{Sigmoid} as activation function~\parencite{enwiki:activation-func} in last layer of our model, then this requires that the dataset map to $[0,1]$ range, and no normalization required. However if we are going to use other loss function like mean-square-error we can use \textit{Tanh} as activation function and use normalization at last stage and  map dataset to $[-1,1]$ as shown in Fig.~\ref{fig:transformation}.
+
+As we can see, there is one optional normalization section in transformation and it can affect other parameters  in the overall system, and we will see similar optional parameters in other parts of our system in this project. We used many configuration options collected in a \textit{DataConfig} class in the notebook, to test and try many of these variations, and finally pick one for final project delivery, for example  we did not use normalization in our dataset transformation since we see more promising result when using BCE as reconstruction loss with Sigmoid-activation at last layer of the model.
+
+\subsection{Model Block Diagram}
+An Auto-Encoder is an unsupervised neural network trained to compress input data into a lower-dimensional bottleneck representation and then reconstruct it as accurately as possible~\parencite{org-autoencoder}, While A Variational Auto-Encoder (VAE)~\parencite{org-vae1} is a generative deep learning model that maps input data to a probabilistic latent space~\parencite{enwiki:latent-space}, enabling both efficient data compression and the generation of realistic new samples (Fig.~\ref{fig:ae-vs-vae}).
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=1.0\textwidth]{ae-vs-vae.drawio}
+	\captionsetup{justification=centering}
+	\caption{Auto-Encoder(AE) vs Variational Auto-Encoder(VAE).}
+	\label{fig:ae-vs-vae}
+\end{figure}
+
+Since we are dealing with image as an input to encoder that suppose to compress the data into smaller latent dimension (or probabilistic latent dimension), we can use usual Convolutional Neural Network (CNN)~\parencite{enwiki:cnn}, to extract information from input image, while we can use stride=2 in CNN block to reduce the spatial dimension by 2 (toward having lower-dimension), and similar to famous VGG-model~\parencite{vgg}, we double the channel in next block to extract more abstract semantic information using more filters/channels. The the decoder needs to do reverse operations. We organized our model definition, into Convolutional, De-Convolutional, Encode, and Decoder blocks as shown in Fig.~\ref{fig:conv-deconv} and Fig.~\ref{fig:enc-dec-vae}.
+
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=0.75\textwidth]{vae-conv-deconv-blocks.drawio}
+	\captionsetup{justification=centering}
+	\caption{ Convolutional-Block(ConvBlock) and De-Convolutional-Block(DeConvBlock).}
+	\label{fig:conv-deconv}
+\end{figure}
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=1.0\textwidth]{vae-Enc-Dec.drawio}
+	\captionsetup{justification=centering}
+	\caption{Encoder Block, Decoder Block and Complete VAE Model.}
+	\label{fig:enc-dec-vae}
+\end{figure}
+
+Fig.~\ref{fig:enc-dec-vae} shows 4 layers of CovBlock, 64 filters in first  CovBlock, and 128 as the dimension for latent-space which are used in our final model\footnote{These parameters are part of \textit{DataConfig} class in the notebook, and can be changed.}.
+
+\subsection{VAE Loss Function}
+In VAEs, the overall objective~\parencite{org-vae1} is to minimize the negative Evidence Lower Bound (ELBO)~\parencite{enwiki:elbo}:
+
+$$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{rec}} + \beta \cdot \mathcal{L}_{\text{KLD}}$$
+
+Here, the reconstruction loss measures how accurately the decoder reconstructs the input (e.g. using mean squared error),
+while the Kullback-Leibler Divergence ($\text{KLD}$) ~\parencite{enwiki:kld} forces
+the latent space representation to approximate a standard normal distribution $\mathcal{N}(0, \mathbf{I})$.
+
+For reconstruction loss we can try Mean Square Error (MSE), Mean Absolute Error (MAE) , a combination of MSE and MAE, or Binary-Cross-Entropy (BCE). We have briefly tried these options and we find out BCE produce better (sharper) generated samples, therefor we focus on optimizing our work based on BCE, other option may need more tuning or adjusting other parameters that can be considered as future works.
+
+$\beta$ is KLD-weight in total-loss, and need to be adjust properly. After many trials we fond out that in our setup, we have to set $\beta$ to very small values $[ 0.00025,  0.00035]$ then we start from $ 0.00025$ and slowly increase it to $0.00035$ during $50$ epochs, to make sure at the beginning it's not affecting the model training for reconstruction, instead of using linear increase we use the following formula that stay low, and ramp up with delay:
+
+$$\beta(epoch) = 0.00025 + 0.0001\times\Big(\frac{epoc}{50}\Big)^3$$
+
+After we found out that our best model (least total-loss on validation dataset) happen on epoch=27, for demonstration purpose we aggressively increase $\beta$ after epoch $30$ to reduce the KLD-loss and show the failure mode on VAE where all the image become blurry , washed-out  or kind of similar to each other (mode averaging (blurriness)).
+
+\subsection{Optimizer}
+We used Adam Optimizer~\parencite{Adam-pytorch}, which delivering fast convergence and strong performance across a wide range of architectures with minimal hyper-parameter tuning. we also include simple ExponentialLR~\parencite{scheduler-pytorch} to decrease the learning rate per epoch as the training progress.
 
 \section{Output Evaluation and Interpretation}
-Discuss generated outputs, highlighting quality, variability, and limitations.
+\subsection{Learning Curves}
+Fig.~\ref{fig:learning-curve} shows training learning curves.
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=1.0\textwidth]{learning-curve}
+	\captionsetup{justification=centering}
+	\caption{Training Learning Curves.}
+	\label{fig:learning-curve}
+\end{figure}
+
+\begin{itemize}
+	\item At epoch 27 we have the best total validation loss	
+	\item We keep KLD-weight low at initial epochs and after the model trained and established its reconstruction capability we keep increasing KLD-weight, at some point around epoch 27, we can see KLD-loss start dropping, and forcing the model to pay more attention to KLD, cause the total construction loss increase.
+	\item Overall epoch 27 is the sweet-spot, where we have best validation total-loss, and KLD is limited and not going up anymore.
+	\item Pushing the KLD-weight higher,  reduces the KLD-loss further, but degrades generation diversity and causes mode averaging (blurriness), making the generated anime faces overly uniform.
+	\item For demonstration purpose we intentionally increase KLD-weight to show that we can keep decreasing KLD-loss, but it will affect the reconstruction loss (and consequently total-loss), and also the generated images can be affected (mode averaging (blurriness) Fig.~\ref{fig:gen-during-train}).
+\end{itemize}
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=1.0\textwidth]{generated-during-training}
+	\captionsetup{justification=centering}
+	\caption{Left: mode averaging (blurriness), Right: best model}
+	\label{fig:gen-during-train}
+\end{figure}
+
+\subsection{Image Loss Distributions}
+Fig.~\ref{fig:loss-boxplot} shows the loss distributions for all images using the best model.
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=1.0\textwidth]{loss-boxplot-per-split}
+	\captionsetup{justification=centering}
+	\caption{Image Loss Distributions}
+	\label{fig:loss-boxplot}
+\end{figure}
+
+\begin{itemize}
+	\item During training when we calculate the loss, it will be average per batch or per epoch, however in Fig.~\ref{fig:loss-boxplot} we did not use any averaging, and the loss value is the loss per image, which will help us to investigate images with extreme low or high losses as we will see in next sections.
+	\item While there are some outliers, Overall the average (median) for Total-Loss, Reconstruction-Loss, and KLD-Loss, are similar per Split (Train/Validation/Test). Also the overall distribution (e.g. IQR range) are similar.
+	\item Therefore investigation images on test dataset can be a good representative of overall dataset.
+\end{itemize}
+
+\subsection{Latent Vectors Distribution}
+Ideally, the latent vectors expected to have normal distribution, and uncorrelated to each-other  (Ideally correlation is an Identity matrix). Fig.~\ref{fig:latent-dist} shows the distribution of few randomly selected latent vectors where visually  they are close to normal, to see more details, Fig.~\ref{fig:latent-qqplot} shows corresponding \textit{Q-Q plot}~\parencite{enwiki:qqplot} which shows more details about normality of these latent vectors.
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=0.5\textwidth]{latent-density}
+	\captionsetup{justification=centering}
+	\caption{Sample Latent Vectors Distributions.}
+	\label{fig:latent-dist}
+\end{figure}
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=0.5\textwidth]{latent-qqplot}
+	\captionsetup{justification=centering}
+	\caption{Sample Latent Vectors Q-Q Plot.}
+	\label{fig:latent-qqplot}
+\end{figure}
+
+\newpage
+The Q-Q plot shows strong alignment with the normal distribution in the central region, but exhibits some departure at one end or both ends. This indicates that the latent dimension has more extreme values or outliers than a standard normal distribution would predict. Fig.~\ref{fig:latent-corr-mat} shows latent vectors correlation matrix which is not perfect but very close to ideal case of Identity matrix. 
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=0.5\textwidth]{latent-corr-mat}
+	\captionsetup{justification=centering}
+	\caption{Latent Vectors Correlation Matrix.}
+	\label{fig:latent-corr-mat}
+\end{figure}
+
+\subsection{Top-4 Images with Best and Worst Reconstruction}\label{sec:top4}
+Fig.~\ref{fig:loss-boxplot} shows that we have outliers in minimum and maximum range of total losses, and we can select top-4 images with worst (maximum) or top-4 images with best (minimum) total loss for visual investigation. The result are shown in Fig.~\ref{fig:top4}.
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=0.75\textwidth]{top4-best-worst}
+	\captionsetup{justification=centering}
+	\caption{Top-4 Images with Best and Worst Reconstruction.}
+	\label{fig:top4}
+\end{figure}
+
+\begin{itemize}
+\item Interestingly the top 4 images with best reconstruction loss are not a good quality images, even one of them is totally invalid (almost all black) images, detecting such an images for removal from dataset and training can be an interesting future work.
+\item While reconstructed images in VAE is not sharp, but they are generally smooth (sometimes too smooth), but in the worst case here, the image is not smooth at all especially on the face looks like chessboard pattern (In the lower-right image the face is not recognizable at all)	
+\end{itemize}
+
+\subsection{Sample Images with their Reconstructed versions}
+In previous section (Fig.~\ref{fig:top4}) we saw the images with worst and best reconstruction, here in Fig.~\ref{fig:recon-best-last} we show sample random images with their reconstructed versions both with best model and the last-epoch model (that has minimum KLD-loss but shows the failure mode of VAE: mode averaging (blurriness)).
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=1.0\textwidth]{recon-last-best}
+	\captionsetup{justification=centering}
+	\caption{Sample Random Images with Their Reconstruction.}
+	\label{fig:recon-best-last}
+\end{figure}
+
+\subsection{Sample Generated Images From Noise Vector}
+Finally in Fig.~\ref{fig:sample-gent} we can see sample generated images with both best model and the last-epoch model (has mode averaging issue).
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=0.5\textwidth]{randomly-generated}
+	\captionsetup{justification=centering}
+	\caption{Sample Generated Images From Noise Vector.}
+	\label{fig:sample-gent}
+\end{figure}
+
+\begin{itemize}
+	\item The above images are generated anime face from a same normal random latent vectors
+	\item Last-epoch model has min KLD-loss but fails to generate diverse sample (has mode averaging (blurriness) issue)
+	\item Best model has best validation loss with limited KLD-loss and generated a diverse set of images
+	\item Overall best model generate smooth colorful images, but it does not have sharpness or details in more advanced models like DCGAN~\parencite{dcgan} or StyleGAN~\parencite{styleGAN}.
+\end{itemize}
+
+\subsection{Discussion of Generated Outputs: Quality, Variability, and Limitations}
+The generated samples illustrated in Fig.~\ref{fig:sample-gent} highlight the performance dynamics, visual quality, and inherent structural boundaries of our VAE architecture:
+
+\begin{itemize}
+	\item \textbf{Quality:} The best model (epoch 27) reliably captures high-level global structures of anime faces, including skin tone variations, hair color diversity, eye positioning, and general head orientation. The generated images exhibit smooth transitions without harsh grid artifacts or severe spatial distortions.
+	\item \textbf{Variability:} Sampling directly from the standard normal latent distribution $\mathcal{N}(0, \mathbf{I})$ yields diverse output faces with varied hair styles, facial expressions. This confirms that the encoder successfully mapped the training distribution onto a continuous, smooth, and well-behaved latent space without severe collapse.
+	\item \textbf{Limitations:}  The generated outputs lack sharp high-frequency details. Fine features such as distinct eye pupils, individual hair strands, mouth outlines, and sharp line art appear soft or slightly smudged. This blurriness is a fundamental limitation of pixel-wise reconstruction losses (e.g., BCE/MSE combined with $\text{KLD}$ regularization), which tend to average over plausible pixel configurations rather than committing to sharp boundaries.
+\end{itemize}
 
 \section{Ethical Considerations and Responsible Use}
-Identify at least one ethical concern related to bias, misuse, creative ownership, or societal impact.
+Generative modeling of human and stylized faces introduces key ethical considerations regarding data representation, creative ownership, and potential misuse:
+
+\begin{itemize}
+	\item \textbf{Dataset Representation:} The dataset comprises web-scraped images ~\parencite{org-animefacedataset}, which even for anime inherit specific stylistic biases compare to global anime art. Therefore the  model can be biased and not representative of global anime styles.
+	\item \textbf{Artist Ownership and Copyright:} Anime art datasets often aggregate illustrations without explicit permission or licensing from the original creators. Automatically generating anime might be unfair to original creators, and violate copyright and creative ownership.
+	\item \textbf{Deepfake and Identity Misuse Risks:} Although stylized anime faces pose lower risks of real-person identity fraud compared to photorealistic human face generators, similar architectures or improved versions can be repurposed to generate synthetic media for impersonation.
+\end{itemize}
 
 \section{Limitations and Future Improvements}
-Describe limitations of the model or data and propose realistic next steps.
+While our model successfully implemented Variational Auto-Encoders (VAE) on image synthesis, several architectural and data processing limitations persist:
 
+\begin{itemize}
+	\item \textbf{Architectural Limitations:} The simple 4-layer convolutional topology restricts spatial resolution to $64\times64$.  This is not really deep CNN for analyzing and capturing details in image.
+	\item \textbf{Dataset Quality Control:} As identified in \nameref{sec:top4}-section, the dataset contains low-quality, corrupt, or near-black outliers that negatively impact model generalization and loss calculations.
+\end{itemize}
+
+To address these limitations, future work should explore the following realistic improvements:
+\begin{enumerate}
+	\item \textbf{Improve Model Architecture:} Use deeper networks with better architecture (e.g. with idea from  ResNet18~\parencite{resnet18}), or use more advanced VAE like NAVE~\parencite{nvae} to support  higher-resolution generation ($128\times128$ or $256\times256$).
+	\item \textbf{Automated Data Cleaning Pipeline:} Implementing an automated filtering mechanism (e.g., density-based anomaly detection or brightness/contrast thresholds) to automatically remove invalid or corrupted images prior to split and training.
+\end{enumerate}
 % apa does not include ref and appx in TOC we forced it
 \phantomsection % Ensures hyperref links to the correct page
 \addcontentsline{toc}{section}{References}
 \printbibliography %[heading=none] % Removes default unnumbered header so it doesn't double-up
 
 % Appendices start here (AFTER references)
-\appendix
-\phantomsection
-\addcontentsline{toc}{section}{Appendix A: Evaluation Metrics for Binary Classification}
-\section{Appendix A: Evaluation Metrics for Binary Classification}\label{app:a}
-\subsection{ELBO}
-In VAEs, the overall objective is to minimize the negative Evidence Lower Bound (ELBO):
-
-$$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{rec}} + \beta \cdot \mathcal{L}_{\text{KLD}}$$
-
-Here, the reconstruction loss measures how accurately the decoder reconstructs the input (using mean squared error),
-while the Kullback-Leibler Divergence ($\text{KLD}$) forces
-the latent space representation to approximate a standard normal distribution $\mathcal{N}(0, \mathbf{I})$.
-
+%\appendix
+%\phantomsection
+%\addcontentsline{toc}{section}{Appendix A: Evaluation Metrics for Binary Classification}
+%\section{Appendix A: Evaluation Metrics for Binary Classification}\label{app:a}
+%\subsection{ELBO}
+%Well, 
 %\newpage
 %
 %\phantomsection
