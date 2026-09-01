@@ -1,6 +1,6 @@
 # Generative Model
 We are using Anime Face Dataset dataset from Kaggle. The dataset contains `63565` anime-face images, and the goal is to use Variational Auto-Encoder (VAE), to generate anime faces.
-__[PDF Report](./report/Generative_AI_Analysis_Report.pdf)__
+__[PDF Report](./report/report.pdf)__
 
 ## Dataset
 - Name: Anime Face Dataset dataset
@@ -32,7 +32,7 @@ data folder and out folder are not part of git repo, data-folder will be populat
 │   └── sample-out.pth
 ├── README.md
 ├── report
-│   ├── Generative_AI_Analysis_Report.pdf
+│   ├── report.pdf
 │   ├── generative_model.html
 │   └── latex
 │       ├── img
