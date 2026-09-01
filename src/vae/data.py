@@ -93,7 +93,7 @@ def get_dataloaders(cfg: Any)-> Dict[str,torch.utils.data.DataLoader]:
 
         total_size = len(train_dataset_full)
         valid_size = int(cfg.valid_ratio * total_size)
-        test_size = int(cfg.train_ratio * total_size)
+        test_size = int(cfg.test_ratio * total_size)
         train_size = total_size - valid_size -test_size
 
         # Generate indices and create subsets  (We use generator for reproducibility)
