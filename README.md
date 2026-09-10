@@ -103,3 +103,7 @@ Sample reconstruction by bets model and last-epoch model
 Sample anime face generation from random vectors
 
 ![generation](./report/latex/img/randomly-generated.png)
+
+### DCGAN
+I also did quick check with DCGAN on same dataset, and as expected DCGAN for face-generation is much better.
+- see results [here](https://github.com/xamyxar/dl-dcgan-anime-face).
